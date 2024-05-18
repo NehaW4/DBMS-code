@@ -1,0 +1,596 @@
+practical 11
+Write a PL/SQL code block to calculate the area of a circle for a value of radius varying from 5 to 9.Store the radius and the corresponding values of calculated area in an empty table named areas, consisting of two columns, radius and area
+
+CREATE TABLE circle(radius NUMBER,area NUMBER);
+
+Table created.
+
+DECLARE
+       radius_var NUMBER;
+       area_var NUMBER;
+       pi NUMBER := 3.14;
+    BEGIN
+       FOR radius_var IN 5 .. 9 LOOP
+               area_var := pi*radius_var*radius_var;
+               dbms_output.put_line(area_var);
+               INSERT INTO circle VALUES (radius_var,area_var);
+       END LOOP;
+    END;
+   /
+
+PL/SQL procedure successfully completed.
+
+SQL> select * from circle;
+
+    RADIUS       AREA
+---------- ----------
+         5       78.5
+         6     113.04
+         7     153.86
+         8     200.96
+         9     254.34
+
+
+
+
+Practical 12
+PL/SQL procedure 
+1.	Borrower(Roll_no, Name, DateofIssue, NameofBook, Status)
+2.	Fine(Roll_no,Date,Amt)
+Accept Roll_no and NameofBook from user.
+Write a PL/SQL procedure. The procedure calculates the fine and  performs the book returning operation
+Assume suitable conditions for calculating fine.
+●	Check the number of days (from date of issue).
+●	If days are between 15 to 30 then fine amount will be Rs 5per day.
+●	If no. of days>30, per day fine will be Rs 50 per day and for days less than 30, Rs. 5 per day.
+●	If condition of fine is true, then details will be stored into fine table.
+●	Also handles the exception by named exception handler or user define exception handler.
+
+create table Borrower (RollNo NUMBER PRIMARY KEY,Name varchar(10),IssueDate Date,Status varchar(10),BookName varchar(10));
+create table Fine (RollNo NUMBER,ReturnDate Date,Amount NUMBER);
+
+INSERT INTO Borrower (RollNo, Name, IssueDate, Status, BookName)
+VALUES (1, 'Alice', TO_DATE('2023-10-01', 'YYYY-MM-DD'), 'PENDING', 'DBMS');
+
+INSERT INTO Borrower (RollNo, Name, IssueDate, Status, BookName)
+VALUES (2, 'Bob', TO_DATE('2023-09-15', 'YYYY-MM-DD'), 'PENDING', 'CNS');
+
+INSERT INTO Borrower (RollNo, Name, IssueDate, Status, BookName)
+VALUES (3, 'Charlie', TO_DATE('2023-09-20', 'YYYY-MM-DD'), 'PENDING', 'SPOS');
+
+INSERT INTO Borrower (RollNo, Name, IssueDate, Status, BookName)
+VALUES (4, 'David', TO_DATE('2023-09-10', 'YYYY-MM-DD'), 'PENDING', 'TOC');
+
+INSERT INTO Borrower (RollNo, Name, IssueDate, Status, BookName)
+VALUES (5, 'Eve', TO_DATE('2023-10-05', 'YYYY-MM-DD'), 'PENDING', 'HCI');
+
+set serveroutput on
+DECLARE
+    vRollNo NUMBER;
+    vBookName varchar(10);
+    vDOI Date;
+    vDays NUMBER;
+    vFineAmount NUMBER;
+BEGIN
+   	vRollNo := &rollno;
+    vBookName := '&bookname';
+    SELECT IssueDate INTO vDOI FROM Borrower where RollNo=vRollNo;
+    vDays := TRUNC(SYSDATE - vDOI);
+    IF vDays BETWEEN 15 AND 30 THEN
+    	vFineAmount := vDays * 5;
+    ELSIF vDays > 30 THEN
+    	vFineAmount := (vDays - 30) * 50 + 150;
+    ELSE
+    	vFineAmount := 0;
+    END IF;
+    insert into Fine values (vRollNo,SYSDATE,vFineAmount);
+    delete from Borrower where RollNo=vRollNo;
+EXCEPTION
+	WHEN NO_DATA_FOUND THEN
+		dbms_output.put_line('Data Not Found');
+	WHEN OTHERS THEN
+		dbms_output.put_line('SQL Internal Error');
+END;
+/
+
+Enter value for rollno: 1
+old   8:        vRollNo := &rollno;
+new   8:        vRollNo := 1;
+Enter value for bookname: DBMS
+old   9:     vBookName := '&bookname';
+new   9:     vBookName := 'DBMS';
+
+PL/SQL procedure successfully completed.
+
+SQL> /
+Enter value for rollno: 3
+old   8:        vRollNo := &rollno;
+new   8:        vRollNo := 3;
+Enter value for bookname: SPOS
+old   9:     vBookName := '&bookname';
+new   9:     vBookName := 'SPOS';
+
+PL/SQL procedure successfully completed.
+
+SQL> select * from borrower;
+
+    ROLLNO NAME       ISSUEDATE STATUS     BOOKNAME
+---------- ---------- --------- ---------- ----------
+         2 Bob        15-SEP-23 PENDING    CNS
+         4 David      10-SEP-23 PENDING    TOC
+         5 Eve        05-OCT-23 PENDING    HCI
+
+SQL> select * from fine;
+
+    ROLLNO RETURNDAT     AMOUNT
+---------- --------- ----------
+         1 04-NOV-23        350
+         3 04-NOV-23        900
+
+SQL> /
+
+    ROLLNO RETURNDAT     AMOUNT
+---------- --------- ----------
+         1 04-NOV-23        350
+         3 04-NOV-23        900
+
+
+
+
+
+
+Practical 13
+
+Procedure
+Consider table Student (Roll, Name, Attendance ,Status)
+Write a PL/SQL block for following requirements and handle the exceptions. Roll no. of students will be entered by the user. Attendance of roll no. entered by user will be checked in the Stud table. If attendance is less than 75% then display the message “Term not granted” and set the status in stud table as “Detained”. Otherwise display message “Term granted” and set the status in stud table as “Not Detained”
+
+create table Student(RollNo NUMBER PRIMARY KEY,Name varchar(10),Attendance NUMBER,Status varchar(10) DEFAULT 'NOT SET');
+INSERT INTO Student (RollNo, Name, Attendance) VALUES (1, 'Pruthvi', 90);
+INSERT INTO Student (RollNo, Name, Attendance) VALUES (2, 'Adi', 75);
+INSERT INTO Student (RollNo, Name, Attendance) VALUES (3, 'Varun', 14);
+INSERT INTO Student (RollNo, Name, Attendance) VALUES (4, 'Prajakta', 58);
+INSERT INTO Student (RollNo, Name, Attendance) VALUES (5, 'Nayan', 36);
+INSERT INTO Student (RollNo, Name, Attendance) VALUES (6, 'Samarth', 88);
+INSERT INTO Student (RollNo, Name, Attendance) VALUES (7, 'Dhanu', 78);
+
+DECLARE
+	vRollNo NUMBER;
+	vAttendance NUMBER;
+BEGIN
+	vRollNo := &rollno;
+	SELECT Attendance INTO vAttendance FROM Student WHERE RollNo=vRollNo;
+	IF vAttendance < 75 THEN
+		dbms_output.put_line('Term Not Granted');
+		update Student set Status='Detained' where RollNo=vRollNo;
+	ELSE
+		dbms_output.put_line('Term Granted');
+		update Student set Status='Not Detain' where RollNo=vRollNo;
+	END IF;
+EXCEPTION
+	WHEN NO_DATA_FOUND THEN
+		dbms_output.put_line('No Such Data Found');
+	WHEN OTHERS THEN
+		dbms_output.put_line('Internal SQL Error');
+END;
+/
+	
+Enter value for rollno: 1
+old   5:        vRollNo := &rollno;
+new   5:        vRollNo := 1;
+Term Granted
+
+PL/SQL procedure successfully completed.
+
+SQL> /
+Enter value for rollno: 2
+old   5:        vRollNo := &rollno;
+new   5:        vRollNo := 2;
+Term Granted
+
+PL/SQL procedure successfully completed.
+
+SQL> /
+Enter value for rollno: 3
+old   5:        vRollNo := &rollno;
+new   5:        vRollNo := 3;
+Term Not Granted
+
+PL/SQL procedure successfully completed.
+
+SQL> /
+Enter value for rollno: 4
+old   5:        vRollNo := &rollno;
+new   5:        vRollNo := 4;
+Term Not Granted
+
+PL/SQL procedure successfully completed.
+
+SQL> /
+Enter value for rollno: 5
+old   5:        vRollNo := &rollno;
+new   5:        vRollNo := 5;
+Term Not Granted
+
+PL/SQL procedure successfully completed.
+
+SQL> /
+Enter value for rollno: 6
+old   5:        vRollNo := &rollno;
+new   5:        vRollNo := 6;
+Term Granted
+
+PL/SQL procedure successfully completed.
+
+SQL> select * from student;
+
+    ROLLNO NAME       ATTENDANCE STATUS
+---------- ---------- ---------- ----------
+         1 Pruthvi            90 Not Detain
+         2 Adi                75 Not Detain
+         3 Varun              14 Detained
+         4 Prajakta           58 Detained
+         5 Nayan              36 Detained
+         6 Samarth            88 Not Detain
+         7 Dhanu              78 NOT SET
+
+7 rows selected.
+
+
+
+
+Practical 14
+Procedure 
+Write a Stored Procedure namely Proc_Grade for the categorization of student. If marks scored by students in examination is <=1500 and marks>=990 then student will be placed in distinction category if marks scored are between 989 and 900 category is first class, if marks 899 and 825 category is Higher Second Class.
+Write a PL/SQL block for using procedure created with above requirement.
+Stud_Marks(Roll, Name, Total_marks)
+Result(Roll, Name, Class)
+
+CREATE TABLE stud_marks(name VARCHAR2(25),total_marks NUMBER);
+CREATE TABLE result(roll_number NUMBER , name VARCHAR2(25), class VARCHAR2(30));
+
+set serveroutput on
+CREATE OR REPLACE PROCEDURE proc_Grade ( roll_no IN NUMBER, name IN VARCHAR2 ,marks IN NUMBER) AS
+       BEGIN
+               IF (marks<=1500 and marks>=990) THEN
+                       DBMS_OUTPUT.PUT_LINE ('DISTINCTION');
+                       INSERT INTO result VALUES (roll_no,name,'DISTINCTION');
+               ELSIF (marks<=989 and marks>=900) THEN
+                       DBMS_OUTPUT.PUT_LINE ('FIRST CLASS');
+                       INSERT INTO result VALUES (roll_no,name,'FIRST CLASS');
+               ELSIF (marks<=899 and marKs>825) THEN
+                      DBMS_OUTPUT.PUT_LINE('HIGHER SECOND CLASS');
+                      INSERT INTO result VALUES (roll_no,name,'HIGHER SECOND CLASS');
+              ELSE
+                      DBMS_OUTPUT.PUT_LINE ('FAIL');
+                      INSERT INTO result VALUES (roll_no,name,'FAIL');
+ 
+             END IF;
+          INSERT INTO stud_marks VALUES (name,marks);
+       END proc_Grade;
+   /
+
+Procedure created.
+
+CREATE OR REPLACE FUNCTION func_1(r IN NUMBER, n IN VARCHAR2,m IN NUMBER) RETURN VARCHAR2 AS
+   BEGIN
+              proc_Grade(r,n,m);
+              return 'SUCCESSFULL';
+   END;
+   /
+
+Function created.
+
+DECLARE
+    name_1 VARCHAR2(25);
+    roll_no_1 NUMBER;
+    marks_1 NUMBER;
+    class VARCHAR2(25);
+    BEGIN
+      roll_no_1:=&roll_no_1;
+      name_1:='&name_1';
+      marks_1:=&marks_1;
+      class := func_1(roll_no_1,name_1,marks_1);
+      dbms_output.put_line(class);
+   END;
+   /
+Enter value for roll_no_1: 1
+old   8:        roll_no_1:=&roll_no_1;
+new   8:        roll_no_1:=1;
+Enter value for name_1: Akshata
+old   9:        name_1:='&name_1';
+new   9:        name_1:='Akshata';
+Enter value for marks_1: 1000
+old  10:        marks_1:=&marks_1;
+new  10:        marks_1:=1000;
+
+PL/SQL procedure successfully completed.
+
+SQL> /
+Enter value for roll_no_1: 2
+old   8:        roll_no_1:=&roll_no_1;
+new   8:        roll_no_1:=2;
+Enter value for name_1: Prajakta
+old   9:        name_1:='&name_1';
+new   9:        name_1:='Prajakta';
+Enter value for marks_1: 900
+old  10:        marks_1:=&marks_1;
+new  10:        marks_1:=900;
+
+PL/SQL procedure successfully completed.
+
+SQL> /
+Enter value for roll_no_1: 3
+old   8:        roll_no_1:=&roll_no_1;
+new   8:        roll_no_1:=3;
+Enter value for name_1: Neha
+old   9:        name_1:='&name_1';
+new   9:        name_1:='Neha';
+Enter value for marks_1: 800
+old  10:        marks_1:=&marks_1;
+new  10:        marks_1:=800;
+
+PL/SQL procedure successfully completed.
+
+SQL> select * from stud_marks;
+
+NAME                      TOTAL_MARKS
+------------------------- -----------
+Akshata                          1000
+Prajakta                          900
+Neha                              800
+
+SQL> select * from result;
+
+ROLL_NUMBER NAME                      CLASS
+----------- ------------------------- ------------------------------
+          1 Akshata                   DISTINCTION
+          2 Prajakta                  FIRST CLASS
+          3 Neha                      FAIL
+
+
+
+
+
+
+Practical 15
+Cursor
+Write a PL/SQL block of code using Cursor that will merge the data available in the newly created table N_RollCall with the data available in the table O_RollCall. If the data in the first table already exist in the second table then that data should be skipped.
+
+CREATE TABLE NRollCall (StudentID NUMBER PRIMARY KEY,StudentName VARCHAR2(10));
+CREATE TABLE ORollCall (StudentID NUMBER PRIMARY KEY,StudentName VARCHAR2(10));
+
+INSERT INTO NRollCall VALUES (1, 'Akshata');
+INSERT INTO NRollCall VALUES (2, 'Sampada');
+INSERT INTO NRollCall VALUES (3, 'Prajakta');
+INSERT INTO NRollCall VALUES (4, 'Neha');
+INSERT INTO NRollCall VALUES (5, 'Srushti');
+INSERT INTO ORollCall VALUES (2, 'Sampada');
+INSERT INTO ORollCall VALUES (4, 'Neha');
+COMMIT;
+
+DECLARE
+        vStudentID NRollCall.StudentID%TYPE;
+        vStudentName NRollCall.StudentName%TYPE;
+        vCount NUMBER := 0;
+        CURSOR cstudents IS
+            SELECT StudentID, StudentName
+            FROM NRollCall;
+    BEGIN
+        FOR studentrec IN cstudents LOOP
+           SELECT COUNT(*) INTO vCount
+           FROM ORollCall
+           WHERE StudentID = studentrec.StudentID;
+           IF vCount = 0 THEN
+               vStudentID := studentrec.StudentID;
+               vStudentName := studentrec.StudentName;
+               DBMS_OUTPUT.PUT_LINE('Data inserted: Student ' || vStudentName || ' (ID: ' || vStudentID || ')');
+           ELSE
+               DBMS_OUTPUT.PUT_LINE('Data already exists, skipping: Student ' || studentrec.StudentName || ' (ID: ' || studentrec.StudentID || ')');
+           END IF;
+       END LOOP;
+   END;
+  /
+
+Data inserted: Student Akshata (ID: 1)
+Data already exists, skipping: Student Sampada (ID: 2)
+Data inserted: Student Prajakta (ID: 3)
+Data already exists, skipping: Student Neha (ID: 4)
+Data inserted: Student Srushti (ID: 5)
+
+select * from ORollCall;
+
+STUDENTID STUDENTNA
+---------- ----------
+	 2 Sampada
+	 4 Neha
+
+select * from NRollCall;
+
+STUDENTID STUDENTNA
+---------- ----------
+	 1 Akshata
+	 2 Sampada
+	 3 Prajakta
+	 4 Neha
+	 5 Srushti
+
+
+
+
+
+Practical 16
+Trigger
+Write a after trigger for Insert, update and delete event considering following requirement:
+Emp(Emp_no, Emp_name, Emp_salary)
+a)	Trigger should be initiated when salary tried to be inserted is less than Rs.50,000/-
+b)	Trigger should be initiated when salary tried to be updated for value less than Rs. 50,000/-
+c)	Also the new values expected to be inserted will be stored in new table Tracking(Emp_no,Emp_salary).
+
+create table Emp(EmpNo NUMBER PRIMARY KEY,EmpName varchar(10),EmpSalary NUMBER);
+create table Tracking(EmpNo NUMBER,EmpSalary NUMBER,Action varchar(10));
+
+CREATE OR REPLACE TRIGGER EmpTrigger
+BEFORE INSERT OR UPDATE OR DELETE ON Emp
+FOR EACH ROW
+BEGIN
+	IF INSERTING THEN
+		IF : NEW.EmpSalary < 50000 THEN
+			INSERT INTO Tracking (EmpNo, EmpSalary, Action) values (:NEW.EmpNo,:NEW.EmpSalary,'Insert');
+		END IF;
+
+	ELSIF UPDATING THEN
+		IF : NEW.EmpSalary < 50000 THEN
+			INSERT INTO Tracking (EmpNo, EmpSalary, Action) values (:NEW.EmpNo,:NEW.EmpSalary,'Update');
+		END IF;
+
+	ELSE
+		INSERT INTO Tracking (EmpNo, EmpSalary, Action) values (:OLD.EmpNo,:OLD.EmpSalary,'Delete');
+	END IF;
+END;
+/
+
+insert into Emp values (1,'Pruthvi',60000);
+insert into Emp values (2,'Akshu',80000);
+insert into Emp values (3,'Om',90000);
+insert into Emp values (4,'Prajakta',20000);
+
+--update
+update Emp set EmpSalary = 30000 where EmpNo = 1;
+--delete
+
+SQL> select * from Emp;
+
+     EMPNO EMPNAME     EMPSALARY
+---------- ---------- ----------
+         1 Pruthvi         60000
+         2 Akshu           80000
+         3 Om              90000
+         4 Prajakta        20000
+
+SQL> select * from tracking;
+
+     EMPNO  EMPSALARY ACTION
+---------- ---------- ----------
+         4      20000 Insert
+
+SQL> update Emp set EmpSalary = 30000 where EmpNo = 1;
+
+1 row updated.
+
+SQL> select * from tracking;
+
+     EMPNO  EMPSALARY ACTION
+---------- ---------- ----------
+         4      20000 Insert
+         1      30000 Update
+
+
+
+
+
+Practical 17
+Trigger 
+Consider CUSTOMER (ID, Name, Age, Address, Salary) create a row level trigger for the CUSTOMERS table that would fire for INSERT or UPDATE or DELETE operations performed on the CUSTOMERS table. This trigger will display the salary difference between the old values and new values.
+
+create table Customer (ID NUMBER PRIMARY KEY,Name varchar(10),Age NUMBER,Address varchar(10),Salary NUMBER);
+create table AuditCust (ID NUMBER,Diff NUMBER,Action varchar(10));
+
+CREATE OR REPLACE TRIGGER CustTrigger
+BEFORE UPDATE OR DELETE OR INSERT ON Customer
+FOR EACH ROW
+DECLARE
+	vDiff NUMBER;
+BEGIN
+	IF INSERTING THEN
+		vDiff := :NEW.Salary - 0;
+		INSERT INTO AuditCust values (:NEW.ID,vDiff,'Insert');
+	ELSIF UPDATING THEN
+		vDiff := :NEW.Salary - :OLD.Salary;
+		INSERT INTO AuditCust values (:NEW.ID,vDiff,'Update');
+	ELSE
+		vDiff := 0 - :OLD.Salary;
+		INSERT INTO AuditCust values (:OLD.ID,vDiff,'Delete');
+	END IF;
+END;
+/
+
+insert into Customer values (2,'Nayan',21,'Pune',20000);
+update Customer set Salary=90000 where ID=2;
+insert into Customer values (3,'Akshu',21,'Pune',50000);
+delete from Customer where ID = 2;
+
+SQL> select * from AuditCust;
+
+        ID       DIFF ACTION
+---------- ---------- ----------
+         2      20000 Insert
+         2      70000 Update
+         3      50000 Insert
+         2     -90000 Delete
+
+
+
+
+
+Practical 18
+MongoDB CRUD operations, 
+Create collection Employee (Emp_id, Emp_Name, Emp_salary, Emp_Dept.) 
+Insert 10 Documents in the collection.
+Find the employees whose salary is greater than 50000 Rs.
+Increase the salary of Smith by 5000 Rs
+Display the information of employees working in Marketing  department.with less than 45000 salary .
+Display first five highest paid employees
+Delete Employee with Id ‘E1007’
+Create an Index on Emp_Id field , compare the time require to search Emp_id ‘E10008’ before  and after creating an index.
+ (Hint Add at least 10000 Documents)
+
+
+use Eemployee
+db.createCollection("Employee");
+
+db.Employee.insertMany([
+{ Emp_id: "E1001", Emp_Name: "Pruthvi", Emp_salary: 60000, Emp_Dept: "Sales" },
+{ Emp_id: "E1002", Emp_Name: "Nayan", Emp_salary: 40000, Emp_Dept: "HR" },
+{ Emp_id: "E1003", Emp_Name: "Adhish", Emp_salary: 10000, Emp_Dept: "QA" },
+{ Emp_id: "E1004", Emp_Name: "Ritik", Emp_salary: 50000, Emp_Dept: "Test" },
+{ Emp_id: "E1005", Emp_Name: "Praful", Emp_salary: 45000, Emp_Dept: "HR" },
+{ Emp_id: "E1006", Emp_Name: "Sarvesh", Emp_salary: 85000, Emp_Dept: "DevOps" }
+])
+
+db.Employee.find({ Emp_salary: { $gt: 50000 } })
+db.Employee.updateOne({ Emp_id: "E1002" }, { $inc: { Emp_salary: 5000 } })
+db.Employee.find({ Emp_Dept: "Marketing", Emp_salary: { $lt: 45000 } })
+db.Employee.find().sort({ Emp_salary: -1 }).limit(5)
+db.Employee.deleteOne({ Emp_id: "E1007" })
+db.Employee.createIndex({ Emp_id: 1 })
+
+
+
+
+
+Practical 19
+MapReduce
+Create a customer collection consisting of fields like name, email ID, profession, gender, bill amount
+1.	Write a MapReduce query for finding the count of male and female customers in the collection
+2.	Write a MapReduce query for finding the count of each profession in the collection
+3.	Display list of all customers with bill amounts greater than 5000/-
+4.	Update the bill amount of any one customer
+5.	Display all customers with name starting with 'B'
+6.	Display list of all customers with profession = “Business”
+7.	Display all customers in Descending order of  Bill amount
+8.	Create an index on name field of customer collection. Also use the explain() function
+
+
+
+Practical 20
+Mongo Aggregation
+Create a student collection consisting of fields like Roll No, name, class, marks, sports etc
+1.	Display the first 5 toppers of TE
+2.	Display marks of topper of each division
+3.	Display the average marks of each division
+4.	Display the rollcall of TE Comp A
+5.	Display list of fail students from TE Comp A
+6.	Display Name, Class and Marks of all students
+7.	Display list of students who play football
+

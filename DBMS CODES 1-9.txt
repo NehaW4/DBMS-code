@@ -1,0 +1,371 @@
+Practical 1
+
+create table branch(branch_name varchar2(50) primary key,branch_city varchar2(20),assets varchar2(30));
+create table account(acc_no number primary key,branch_name varchar2(50) references branch(branch_name),balance float not null);
+create table customer(cust_name varchar2(30) primary key,cust_street varchar2(50),cust_city varchar2(20));
+create table depositor(cust_name varchar2(30) references customer(cust_name),acc_no number references account(acc_no));
+create table loan(loan_no number  primary key,branch_name varchar2(50) references branch(branch_name),amount float);
+create table borrower1(cust_name varchar2(30) references customer(cust_name),loan_no number references loan(loan_no));
+
+--insert
+insert into branch values('Shivaji Nagar','Pune','Loan');
+insert into branch values('Akurdi','Pune','Loan');
+insert into branch values('Kothrud','Pune','Loan');
+insert into branch values('Swargate','Pune','Loan');
+insert into branch values('Sadashivpet','Pune','Loan');
+
+insert into account values(101,'Kothrud',20000);
+insert into account values(102,'Shivaji Nagar',30000);
+insert into account values(103,'Shivaji Nagar',35000);
+insert into account values(104,'Kothrud',45000);
+insert into account values(105,'Swargate',40000);
+insert into account values(106,'Swargate',40000);
+insert into account values(107,'Sadashivpet',49000);
+insert into account values(108,'Sadashivpet',55000);
+insert into account values(109,'Kothrud',55000);
+insert into account values(110,'Kothrud',75000);
+
+
+insert into customer values('Sampada','Parijat','Pune');
+insert into customer values('Mohan','Parijat','Pune');
+insert into customer values('Gaurav','Sb road','Pune');
+insert into customer values('Ganesh','JM road','Pune');
+insert into customer values('Nikita','JM road','Pune');
+insert into customer values('keshav','Fc road','Pune');
+
+
+insert into depositor values('Mohan',102);
+insert into depositor values('Nikita',110);
+insert into depositor values('keshav',108);
+insert into depositor values('Gaurav',105);
+insert into depositor values('Sampada',103);
+
+
+insert into loan values(1,'Shivaji nagar',300000);
+insert into loan values(1,'Shivaji Nagar',300000);
+insert into loan values(2,'Shivaji Nagar',45000);
+insert into loan values(3,'Kothrud',55000);
+insert into loan values(4,'Kothrud',49000);
+insert into loan values(5,'Kothrud',40000);
+
+
+
+insert into borrower1 values('Sampada',1);
+insert into borrower1 values('Mohan',4);
+insert into borrower1 values('Mahesh',5);
+insert into borrower1 values('Gaurav',5);
+insert into borrower1 values('keshav',3);
+insert into borrower1 values('Nikita',2);
+
+
+1]Find the names of all branches in loan relation.
+  
+   select distinct branch_name from loan;
+
+
+
+2]Find all loan numbers for loans made at 'Shivaji Nagar' Branch with loan amount > 12000.
+   
+  select loan_no from loan where branch_name='Shivaji Nagar' and amount>12000;
+
+
+3]Find all customers who have a loan from bank. Find their names,loan_no and loan amount.
+  select b.cust_name,b.loan_no,l.amount from borrower1 b,loan l where    b.loan_no=l.loan_no;
+
+
+
+
+4]List all customers in alphabetical order who have loan from Akurdi branch.
+select borrower1.cust_name from borrower1 ,loan where loan.branch_name='Kothrud' And loan.loan_no=borrower1.loan_no order by borrower1.cust_name;
+
+
+Practical 2
+a)	Find all customers who have an account or loan or both at bank.
+
+	 select cust_name from borrower1 union select cust_name from depositor;
+
+
+b)	Find all customers who have both account and loan at bank.
+	select cust_name from borrower1 intersect select cust_name from depositor;	
+
+c)	Find all customers who have account but no loan at the bank.
+        select cust_name from depositor Minus select cust_name from borrower1;
+
+d)	Find average account balance at Akurdi branch.
+	select avg(balance) from account where branch_name='Kothrud';
+
+
+Practical 3
+a)	Find the branches where average account balance > 12000.
+	select branch_name,avg(balance) from account  group by branch_name having       avg(balance)>40000  ;
+	
+b)	Find number of tuples in customer relation.
+	select count(cust_name) as no_of_tuples from customer;
+	
+c)	Calculate total loan amount given by bank.
+
+	select sum(amount) as total_loan from loan;
+
+d)	Delete all loans with loan amount between 1300 and 1500.
+	delete from borrower1 where loan_no in(select loan_no from loan where      amount between 30000 and 40000);
+
+Practical 4
+
+Create  Table, View, Index, Sequence, Synonym ,different constraints for above schema
+view:
+create view a as select acc_no from account ;
+
+Index:
+
+create index i1 on account(acc_no,balance);
+
+Sequence:
+create sequence s1
+ start with 1
+  increment by 1
+  minvalue 1
+  maxvalue 100
+  cycle;
+
+Sequence created.
+
+Synonyms:
+create synonym c1 for customer;
+
+Synonym created.
+
+Practical 5
+
+all types of Join, Sub-Query and View
+
+1]inner join
+ select branch.branch_name,branch.branch_city,account.acc_no from branch inner join account on branch.branch_name=account.branch_name;
+
+2]left join
+select depositor.cust_name,borrower1.loan_no,depositor.acc_no from depositor left join borrower1 on depositor.cust_name=borrower1.cust_name;
+
+3]right join
+ select depositor.cust_name,borrower1.loan_no,depositor.acc_no from depositor right join borrower1 on depositor.cust_name=borrower1.cust_name;
+
+4]full join
+ select depositor.cust_name,borrower1.loan_no,depositor.acc_no from depositor full join borrower1 on depositor.cust_name=borrower1.cust_name;
+
+
+Subquery
+
+ select cust_name from borrower1 where loan_no = (select loan_no from loan where amount>55000);
+
+Practical 6
+
+Create table Cust_Master(Cust_no, Cust_name, Qty_Ordered, Order_date, Cust_addr ) 
+
+Cust_no is defined as primary key,
+
+Insert ten records in the table.
+
+
+create table cust_master(cust_no number(3) not null primary key,cust_name varchar(15),Qty_ordered number(3),Order_date date,cust_addr varchar(15));
+
+insert
+insert into cust_master values(101,'Anjali',12,TO_DATE('2023-06-15','YYYY-MM-DD'),'Pune');
+
+insert into cust_master values(118,'Manoj',10,TO_DATE('2023-08-25','YYYY-MM-DD'),'Pune');
+
+insert into cust_master values(104,'Govind',10,TO_DATE('2023-07-25','YYYY-MM-DD'),'Banglore');
+
+insert into cust_master values(112,'Raghav',20,TO_DATE('2023-05-20','YYYY-MM-DD'),'Banglore');
+
+insert into cust_master values(113,'Pooja',20,TO_DATE('2023-05-14','YYYY-MM-DD'),'Mangalore');
+
+insert into cust_master values(105,'Nidhi',20,TO_DATE('2023-08-10','YYYY-MM-DD'),'Mangalore');
+
+insert into cust_master values(111,'Nandu',27,TO_DATE('2023-09-11','YYYY-MM-DD'),'Mumbai');
+
+insert into cust_master values(109,'Rakesh',27,TO_DATE('2023-09-11','YYYY-MM-DD'),'Mumbai');
+
+select * from cust_master;
+
+1]List names of customers having 'a' as second letter in their name
+	select * from cust_master where cust_name like '_a%';
+
+2]List customers who stay in city whose first letter is 'M'
+	select * from cust_master where cust_addr like 'M%';
+3]Display order from Customer no 101,104,105 and 111
+        select * from cust_master where cust_no in(101,105,104,111);
+
+4]List Clients who stay in either 'Banglore or 'Manglore'
+	select * from cust_master where cust_addr='Banglore' or                cust_addr='Mangalore';
+	
+5]Create view Customer_View consisting of Cust_no, Qty_ordered and Order_date
+	create view customer_view as select cust_no,qty_ordered,order_date
+from cust_master;
+
+
+
+Practical 7
+
+Create following tables with suitable constraints. Make suitable use of AUTO_INCREMENT.
+
+Insert data and solve the following queries:
+
+PROPERTIES(Pno, Type, Sq_Ft_Area, Rent, Address, Status, Owner No)
+OWNERS (OwnerNo, OwnerName, Phno)
+
+create table owners(owner_no number(5) primary key not null,owner_name varchar(15),Phno number(10));
+
+create table properties(pn number(5),Type varchar2(15),Sq_ft_area number(6),rent number(7),addr varchar(15),Status varchar(5),owner_no number(5) references owners(owner_no));
+
+
+
+insert-----------
+insert into owners values(1,'Bobby',145224583);
+insert into owners values(2,'John',178224583);
+insert into owners values(3,'Alice',898224583);
+insert into owners values(4,'Angel',78924583);
+insert into owners values(5,'Sofy',658924583);
+
+insert into properties values(1,'1BHK',600,12000,'Kothrud','NR',1);
+insert into properties values(2,'2BHK',600,22000,'Kothrud','NR',1);
+insert into properties values(3,'2BHK',600,27000,'Kothrud','NR',2);
+insert into properties values(4,'3BHK',750,37000,'Pimpri','R',2);
+insert into properties values(5,'3BHK',850,47000,'Pimpri','NR',3);
+insert into properties values(6,'3BHK',550,37000,'Pimpri','NR',5);
+insert into properties values(pn_seq.nextval,'2BHK',550,17000,'shivajinagar','NR',5);
+insert into properties values(pn_seq.nextval,'1BHK',550,17000,'shivajinagar','NR',4);
+insert into properties values(pn_seq.nextval,'1BHK',750,21000,'shivajinagar','NR',4);
+insert into properties values(pn_seq.nextval,'2BHK',950,29000,'shivajinagar','NR',4);
+insert into properties values(pn_seq.nextval,'4BHK',1550,55000,'Model','NR',4);
+
+
+
+
+1.	Display all 1BHK apartments in Kothrud which are not rented
+	select * from properties where type='1BHK' and addr='Kothrud' and status='NR';
+
+
+2.	Display all properties owned by “Angel”
+select owners.owner_name,properties.type,properties.sq_ft_area,properties.rent,properties.addr,properties.status,owners.owner_no from owners ,properties where owner_name='Angel';
+
+3.	Write a query to display the smallest property of each owner
+    select owner_no,min(sq_ft_area) from properties group by owner_no;
+	
+4.	Display all properties in Kothrud in Descending order of rent
+	 select * from properties where addr='shivajinagar' order by rent de
+sc;
+
+Practical 8
+
+5.	Create a view which shows OwnerName along with his Pno, type, Address and Rent
+
+	create view v1 as select owners.owner_name,properties.pn,properties.type,properties.addr,properties.rent from owners inner join properties on owners.owner_no=properties.owner_no;
+ 	
+6.	Display the names of all Owners whose name has “bb”
+	select owner_name from owners where owner_name like '%bb%';
+
+7.	Display Pno, Type, Address, Rent and status of all properties with rent greater than 15000/- and less than 22000/-
+
+	select pn,type addr,rent,status from properties where rent between
+15000 and 22000;
+	
+
+8.	Display different property types registered with the real estate agency
+	select distinct type from properties
+
+Practical 9
+Create following tables with suitable constraints. Make suitable use of AUTO_INCREMENT.
+
+Insert data and solve the following queries:
+
+CUSTOMERS(CNo, Cname, Ccity, CMobile)
+
+ITEMS(INo, Iname, Itype, Iprice, Icount)
+
+PURCHASE(PNo, Pdate, Pquantity, Cno, INo)
+
+create table customers(c_no number primary key not null,cname varchar2(10),Ccity  varchar2(10),cMobile number(10));
+
+create table items(ino number(3) primary key not null,Iname varchar2(10),Itype varchar2(10),Iprice number(5),Icount number(5));
+create table purchase(pno number(5),pdate date,pquantity number(5),C_no references customers(c_no),Ino references items(Ino));
+
+insert into customers values(1,'Anjali','Pune',987421524);
+
+insert into customers values(2,'Mohan','Pune',987421524);
+
+insert into customers values(3,'Mahesh','Goa',988421524);
+
+insert into customers values(4,'Govind','Goa',88421524);
+
+insert into customers values(5,'Ganesh','Pune',878421524);
+
+insert into customers values(6,'Harsh','Pune',97842152);
+
+insert into customers values(7,'Sonali','Banglore',97842152);
+
+
+insert into items values(1,'Sugar','grocery',400,10);
+
+insert into items values(2,'Dal','grocery',500,11);
+
+insert into items values(3,'pen','Stationary',240,15);
+
+insert into items values(4,'book','Stationary',740,15);
+
+insert into items values(5,'paper','Stationary',140,75);
+
+insert into items values(6,'chair','furninut',250,1);
+
+insert into items values(7,'Table','furninut',7000,4);
+
+insert into items values(8,'glass','furninut',7000,4);
+
+
+insert into purchase values(1,TO_DATE('2023-09-12','YYYY-MM-DD'),101,1,1);
+
+insert into purchase values(2,TO_DATE('2023-07-12','YYYY-MM-DD'),101,2,1);
+
+insert into purchase values(3,TO_DATE('2023-02-12','YYYY-MM-DD'),102,2,2);
+
+insert into purchase values(4,TO_DATE('2023-02-12','YYYY-MM-DD'),102,1,2);
+
+insert into purchase values(4,TO_DATE('2023-08-12','YYYY-MM-DD'),102,1,3);
+
+insert into purchase values(4,TO_DATE('2023-02-12','YYYY-MM-DD'),102,2,4);
+
+insert into purchase values(6,TO_DATE('2023-03-12','YYYY-MM-DD'),102,1,4);
+
+insert into purchase values(6,TO_DATE('2023-02-12','YYYY-MM-DD'),102,2,5);
+
+insert into purchase values(6,TO_DATE('2023-02-12','YYYY-MM-DD'),102,4,6);
+
+
+
+
+
+1.	List all stationary items with price between 400/- to 1000/-
+	select Iname from items where iprice between 400 and 1000;	
+
+2.	Change the mobile number of customer “Govind”
+	update customers set cmobile=785415874 where cname='Govind'; 
+
+3.	Display the item with maximum price
+	select max(iprice) from items;
+
+4.	Display all purchases sorted from the most recent to the oldest
+	 select * from purchase order by pdate desc;
+
+
+Practical 10
+5.	Count the number of customers in every city
+	select ccity,count(c_no) from customers group by ccity;
+
+6.	Display all purchased quantity of Customer Maya
+	select pquantity from purchase where c_no=(select c_no from customers where cname='Maya');
+
+7.	Display list of customers whose name ends with 'a'
+	select cname from customers where cname like '%a';
+
+8.	Create view which shows Iname, Price and Count of all stationary items in descending order of price
+	 create view itemview as select iname,iprice,icount from items order
+ by iprice desc;
+
+
